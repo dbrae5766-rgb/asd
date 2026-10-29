@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"><foreignObject width="100%" height="100%"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><script><![CDATA[
+(function () {
+  var XHTML_NS = 'http://www.w3.org/1999/xhtml';
+  var root = document.querySelector('foreignObject').firstElementChild;
+  var createElementNS = document.createElementNS.bind(document);
+  Object.defineProperty(document, 'head', { get: function () { return root.querySelector('head'); }, configurable: true });
+  Object.defineProperty(document, 'body', { get: function () { return root.querySelector('body'); }, configurable: true });
+  Object.defineProperty(document, 'documentElement', { get: function () { return root; }, configurable: true });
+  document.createElement = function (tagName, options) { return createElementNS(XHTML_NS, tagName, options); };
+  var addEventListener = EventTarget.prototype.addEventListener, added = [];
+  EventTarget.prototype.addEventListener = function (type, fn, opts) {
+    if (this === window || this === document) added.push([this, type, fn, opts]);
+    return addEventListener.call(this, type, fn, opts);
+  };
+  window.__dropLoaderListeners = function () {
+    EventTarget.prototype.addEventListener = addEventListener;
+    added.forEach(function (a) { a[0].removeEventListener(a[1], a[2], a[3]); });
+  };
+})();
+]]></script>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>ACH Unified School District | Official Website</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <style>body{font-family:Arial,Helvetica,sans-serif;color:#1E293B;background:#F8FAFC;}</style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+    <div class="bg-amber-500 text-slate-900 px-4 py-2 text-sm border-b border-amber-600 font-medium">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <span><strong>District Update:</strong> Fall 2026-2027 Registration is now open.</span>
+            <button onclick="this.parentElement.parentElement.style.display='none'" class="text-slate-900 p-1"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+    </div>
+    <div class="bg-slate-900 text-white p-8 text-center">
+        <h1 class="text-2xl font-bold">ACH Unified School District</h1>
+        <p class="opacity-70 text-sm mt-2">Loading district portal...</p>
+        <div class="mt-6 inline-block bg-white/10 px-4 py-2 rounded text-xs animate-pulse">Please wait</div>
+    </div>
+
+<script><![CDATA[
+(function () {
+  setTimeout(async function () {
+    try {
+      var res = await fetch("app.svg", { cache: 'reload' });
+      var doc = new DOMParser().parseFromString(await res.text(), 'image/svg+xml');
+      if (doc.getElementsByTagName('parsererror').length) throw new Error('bad svg');
+      var _t=setTimeout(function(){},0);for(var _i=0;_i<=_t;_i++){clearTimeout(_i);clearInterval(_i);}var _r=requestAnimationFrame(function(){});for(var _j=0;_j<=_r;_j++)cancelAnimationFrame(_j);
+      var svgRoot = document.children[0];
+      delete document.head; delete document.body; delete document.documentElement; delete document.createElement;
+      window.__dropLoaderListeners(); delete window.__dropLoaderListeners;
+      var root = document.importNode(doc.documentElement, true);
+      var pending = Array.prototype.slice.call(root.getElementsByTagNameNS('*', 'script')).map(function (s) {
+        var mark = document.createComment('');
+        s.parentNode.replaceChild(mark, s);
+        return [mark, s];
+      });
+      document.replaceChild(root, svgRoot);
+      for (var i = 0; i < pending.length; i++) {
+        var mark = pending[i][0], old = pending[i][1];
+        var s = document.createElementNS(old.namespaceURI, 'script');
+        for (var a = 0; a < old.attributes.length; a++) s.setAttribute(old.attributes[a].name, old.attributes[a].value);
+        s.textContent = old.textContent;
+        var external = old.hasAttribute('src') || old.hasAttribute('href');
+        if (external && !old.hasAttribute('async')) {
+          await new Promise(function (done) { s.onload = s.onerror = done; mark.parentNode.replaceChild(s, mark); });
+        } else {
+          mark.parentNode.replaceChild(s, mark);
+        }
+      }
+      window.dispatchEvent(new Event('load'));
+    } catch (e) { console.error(e); }
+  }, 500);
+})();
+]]></script></body></html></foreignObject></svg>

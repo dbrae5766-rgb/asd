@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"><foreignObject width="100%" height="100%"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content"/>
+<title>Home - Classroom</title>
+<meta name="description" content="Scramjet 1.1.0 demo via achroma-style loader"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<style>
+  html,body,#root{margin:0;width:100%;height:100%;overflow:hidden}
+  body{font-family:Inter,system-ui,Arial;background:#0f0f13;color:#e8e8ea;display:flex;flex-direction:column}
+  header{padding:10px 14px;background:#18181f;border-bottom:1px solid #2a2a34;display:flex;gap:10px;align-items:center}
+  header h1{font-size:13px;letter-spacing:.06em;opacity:.8;white-space:nowrap}
+  #bar{flex:1;display:flex;gap:8px}
+  #bar input{flex:1;background:#0f0f13;border:1px solid #2d2d38;color:#fff;padding:10px 12px;border-radius:10px;outline:none}
+  #bar button{background:#5b5bff;color:#fff;border:0;padding:10px 16px;border-radius:10px;cursor:pointer;font-weight:700}
+  #container{flex:1;position:relative;background:#111116}
+  #container iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
+  #status{font-size:11px;opacity:.6}
+</style>
+<script><![CDATA[
+  (function () {
+    const XHTML_NS = 'http://www.w3.org/1999/xhtml';
+    const root = document.querySelector('foreignObject').firstElementChild;
+    const createElementNS = document.createElementNS.bind(document);
+    Object.defineProperty(document, 'head', { get: () => root.querySelector('head'), configurable: true });
+    Object.defineProperty(document, 'body', { get: () => root.querySelector('body'), configurable: true });
+    Object.defineProperty(document, 'documentElement', { get: () => root, configurable: true });
+    document.createElement = function (tagName, options) { return createElementNS(XHTML_NS, tagName, options); };
+  })();
+]]></script>
+<script src="https://cdn.jsdelivr.net/npm/@mercuryworkshop/scramjet@1.1.0/dist/scramjet.bundle.js"></script>
+</head>
+<body>
+  <header>
+    <h1>SCRAMJET 1.1.0</h1>
+    <div id="bar">
+      <input id="url" placeholder="https://example.com" value="https://example.com"/>
+      <button id="go">GO →</button>
+    </div>
+    <span id="status">init…</span>
+  </header>
+  <div id="container"></div>
+<script><![CDATA[
+const { ScramjetController } = $scramjetLoadController();
+const scramjet = new ScramjetController({
+  prefix: "/scramjet/",
+  codec: { encode: (url) => encodeURIComponent(url), decode: (url) => decodeURIComponent(url) },
+  flags: { captureErrors: true, strictRewrites: true }
+});
+let frame;
+async function init() {
+  const status = document.getElementById('status');
+  try {
+    if (!('serviceWorker' in navigator)) { status.textContent='need https'; return; }
+    await navigator.serviceWorker.register('./sw.js', { scope: './' });
+    await navigator.serviceWorker.ready;
+    status.textContent='sw ready';
+    await scramjet.init();
+    status.textContent='ready';
+    frame = scramjet.createFrame();
+    document.getElementById('container').appendChild(frame.frame);
+    frame.go('https://example.com');
+  } catch(e){ console.error(e); status.textContent='error:'+e.message; }
+}
+document.getElementById('go').onclick = () => {
+  const v=document.getElementById('url').value.trim();
+  if(!v) return;
+  frame.go(v.startsWith('http')?v:'https://'+v);
+};
+document.getElementById('url').onkeydown = e=>{ if(e.key==='Enter') document.getElementById('go').click(); };
+init();
+]]></script>
+</body></html></foreignObject></svg>
