@@ -37,7 +37,6 @@
         <p class="opacity-70 text-sm mt-2">Loading district portal...</p>
         <div class="mt-6 inline-block bg-white/10 px-4 py-2 rounded text-xs animate-pulse">Please wait</div>
     </div>
-
 <script><![CDATA[
 (function () {
   setTimeout(async function () {

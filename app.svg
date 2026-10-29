@@ -1,19 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"><foreignObject width="100%" height="100%"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head>
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content"/>
-<title>Home - Classroom</title>
-<meta name="description" content="Scramjet 1.1.0 demo via achroma-style loader"/>
+<title>Home | Infinite Campus</title>
+<link rel="icon" href="https://infinitecampus.com/favicon.ico"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<script src="https://cdn.tailwindcss.com"></script>
 <style>
-  html,body,#root{margin:0;width:100%;height:100%;overflow:hidden}
-  body{font-family:Inter,system-ui,Arial;background:#0f0f13;color:#e8e8ea;display:flex;flex-direction:column}
-  header{padding:10px 14px;background:#18181f;border-bottom:1px solid #2a2a34;display:flex;gap:10px;align-items:center}
-  header h1{font-size:13px;letter-spacing:.06em;opacity:.8;white-space:nowrap}
-  #bar{flex:1;display:flex;gap:8px}
-  #bar input{flex:1;background:#0f0f13;border:1px solid #2d2d38;color:#fff;padding:10px 12px;border-radius:10px;outline:none}
-  #bar button{background:#5b5bff;color:#fff;border:0;padding:10px 16px;border-radius:10px;cursor:pointer;font-weight:700}
-  #container{flex:1;position:relative;background:#111116}
-  #container iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
-  #status{font-size:11px;opacity:.6}
+  *{font-family:Inter,system-ui,sans-serif}
+  html,body{margin:0;width:100%;height:100%;overflow:hidden}
+  body{background:#080A0F;color:#e8ecf1}
+  .glass{background:rgba(22,27,38,0.7);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.06)}
+  .app-card{transition:all .2s}
+  .app-card:hover{transform:translateY(-3px);border-color:rgba(99,102,241,0.5);box-shadow:0 10px 30px rgba(0,0,0,0.4),0 0 20px rgba(99,102,241,0.15)}
+  .search-glow:focus{box-shadow:0 0 0 3px rgba(99,102,241,0.3),0 8px 30px rgba(99,102,241,0.2)}
+  #browserView{position:fixed;inset:0;z-index:50;background:#0f1117;display:none;flex-direction:column}
+  #browserView.active{display:flex}
+  ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#2a2f3f;border-radius:99px}
 </style>
 <script><![CDATA[
   (function () {
@@ -26,46 +29,229 @@
     document.createElement = function (tagName, options) { return createElementNS(XHTML_NS, tagName, options); };
   })();
 ]]></script>
-<script src="https://cdn.jsdelivr.net/npm/@mercuryworkshop/scramjet@1.1.0/dist/scramjet.bundle.js"></script>
+<!-- Scramjet vendor files: MUST be in same folder as index.svg on jsDelivr -->
+<script src="./scramjet/scramjet.js"></script>
+<script src="./controller/controller.api.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@3.0.1/dist/index.js"></script>
 </head>
-<body>
-  <header>
-    <h1>SCRAMJET 1.1.0</h1>
-    <div id="bar">
-      <input id="url" placeholder="https://example.com" value="https://example.com"/>
-      <button id="go">GO →</button>
+<body class="min-h-screen flex flex-col">
+  <!-- Top Nav -->
+  <nav class="h-[56px] flex items-center justify-between px-4 lg:px-6 glass sticky top-0 z-40 shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center font-black text-xs">A</div>
+      <span class="font-extrabold tracking-tight hidden sm:block">AETHER</span>
+      <span class="text-[10px] px-2 py-1 rounded-full bg-violet-600/20 text-violet-300 border border-violet-600/30 hidden sm:block">SCRAMJET • v2</span>
     </div>
-    <span id="status">init…</span>
-  </header>
-  <div id="container"></div>
+    <div class="flex items-center gap-2">
+      <button onclick="cloak()" class="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl glass text-xs font-semibold hover:bg-white/10"><i class="fa-solid fa-up-right-from-square"></i> Cloak</button>
+      <button onclick="toggleSettings()" class="w-9 h-9 rounded-xl glass flex items-center justify-center hover:bg-white/10"><i class="fa-solid fa-gear text-sm"></i></button>
+    </div>
+  </nav>
+
+  <!-- HOME VIEW - Fern/Aether style -->
+  <div id="homeView" class="flex-1 overflow-auto">
+    <!-- Hero -->
+    <div class="max-w-5xl mx-auto px-4 lg:px-6 pt-8 lg:pt-12 pb-8">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl lg:text-5xl font-black tracking-tight">Browse <span class="bg-gradient-to-r from-violet-400 via-indigo-400 to-cyan-400 bg-clip-text text-transparent">freely</span></h1>
+        <p class="text-white/60 text-sm mt-3 max-w-xl mx-auto">Scramjet proxy • Epoxy + WISP • Fast • Cloaked. Search or enter a URL.</p>
+      </div>
+
+      <!-- Big Search -->
+      <div class="max-w-2xl mx-auto">
+        <div class="relative group">
+          <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-white/40 group-focus-within:text-violet-400 transition"></i>
+          <input id="mainSearch" placeholder="Search the web or enter URL..." class="w-full h-[54px] pl-11 pr-28 rounded-2xl bg-[#141821] border border-white/10 text-white placeholder:text-white/40 outline-none search-glow text-[15px]" spellcheck="false"/>
+          <button onclick="doSearch()" class="absolute right-2 top-1/2 -translate-y-1/2 h-9 px-5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-bold hover:brightness-110">Go <i class="fa-solid fa-arrow-right ml-1"></i></button>
+        </div>
+        <div class="flex items-center justify-center gap-2 mt-3 text-[11px] text-white/40">
+          <span>Try:</span>
+          <button onclick="goQuick('https://discord.com')" class="hover:text-white underline">discord</button>
+          <span>•</span>
+          <button onclick="goQuick('https://youtube.com')" class="hover:text-white underline">youtube</button>
+          <span>•</span>
+          <button onclick="goQuick('https://tiktok.com')" class="hover:text-white underline">tiktok</button>
+          <span>•</span>
+          <button onclick="goQuick('https://now.gg')" class="hover:text-white underline">now.gg</button>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div id="status" class="max-w-2xl mx-auto mt-4 hidden items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs">
+        <i class="fa-solid fa-circle-notch fa-spin"></i><span id="statusText">Initializing Scramjet...</span>
+      </div>
+
+      <!-- App Grid - like Fern -->
+      <div class="mt-10">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-sm font-bold tracking-widest text-white/80"><i class="fa-solid fa-fire text-orange-400 mr-2"></i>POPULAR</h2>
+          <span class="text-xs text-white/40">powered by Scramjet</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <button onclick="goQuick('https://discord.com/app')" class="app-card glass rounded-2xl p-4 flex flex-col items-center gap-3 text-center"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/discord/discord-original.svg" class="w-10 h-10"/><span class="text-xs font-semibold">Discord</span><span class="text-[10px] text-white/40">Chat</span></button>
+          <button onclick="goQuick('https://youtube.com')" class="app-card glass rounded-2xl p-4 flex flex-col items-center gap-3 text-center"><div class="w-10 h-10 rounded-xl bg-red-600 flex items-center justify-center"><i class="fa-brands fa-youtube text-white"></i></div><span class="text-xs font-semibold">YouTube</span><span class="text-[10px] text-white/40">Watch</span></button>
+          <button onclick="goQuick('https://tiktok.com')" class="app-card glass rounded-2xl p-4 flex flex-col items-center gap-3 text-center"><div class="w-10 h-10 rounded-xl bg-black border border-white/10 flex items-center justify-center"><i class="fa-brands fa-tiktok text-white"></i></div><span class="text-xs font-semibold">TikTok</span><span class="text-[10px] text-white/40">Shorts</span></button>
+          <button onclick="goQuick('https://twitch.tv')" class="app-card glass rounded-2xl p-4 flex flex-col items-center gap-3 text-center"><div class="w-10 h-10 rounded-xl bg-[#9146FF] flex items-center justify-center"><i class="fa-brands fa-twitch text-white"></i></div><span class="text-xs font-semibold">Twitch</span><span class="text-[10px] text-white/40">Live</span></button>
+          <button onclick="goQuick('https://reddit.com')" class="app-card glass rounded-2xl p-4 flex flex-col items-center gap-3 text-center"><div class="w-10 h-10 rounded-xl bg-[#FF4500] flex items-center justify-center"><i class="fa-brands fa-reddit-alien text-white"></i></div><span class="text-xs font-semibold">Reddit</span><span class="text-[10px] text-white/40">Browse</span></button>
+          <button onclick="goQuick('https://github.com')" class="app-card glass rounded-2xl p-4 flex flex-col items-center gap-3 text-center"><div class="w-10 h-10 rounded-xl bg-white text-black flex items-center justify-center"><i class="fa-brands fa-github text-lg"></i></div><span class="text-xs font-semibold">GitHub</span><span class="text-[10px] text-white/40">Code</span></button>
+
+          <button onclick="goQuick('https://crazygames.com')" class="app-card glass rounded-2xl p-4 flex flex-col items-center gap-3 text-center"><div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center"><i class="fa-solid fa-gamepad text-white"></i></div><span class="text-xs font-semibold">CrazyGames</span><span class="text-[10px] text-white/40">Play</span></button>
+          <button onclick="goQuick('https://now.gg/apps')" class="app-card glass rounded-2xl p-4 flex flex-col items-center gap-3 text-center"><div class="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center font-black text-white text-xs">NOW</div><span class="text-xs font-semibold">Now.gg</span><span class="text-[10px] text-white/40">Cloud</span></button>
+          <button onclick="goQuick('https://1v1.lol')" class="app-card glass rounded-2xl p-4 flex flex-col items-center gap-3 text-center"><div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center"><i class="fa-solid fa-crosshairs text-white"></i></div><span class="text-xs font-semibold">1v1.LOL</span><span class="text-[10px] text-white/40">FPS</span></button>
+          <button onclick="goQuick('https://poki.com')" class="app-card glass rounded-2xl p-4 flex flex-col items-center gap-3 text-center"><div class="w-10 h-10 rounded-xl bg-[#00D1B2] flex items-center justify-center font-black text-white text-xs">POKI</div><span class="text-xs font-semibold">Poki</span><span class="text-[10px] text-white/40">Arcade</span></button>
+          <button onclick="goQuick('https://chess.com')" class="app-card glass rounded-2xl p-4 flex flex-col items-center gap-3 text-center"><div class="w-10 h-10 rounded-xl bg-[#769656] flex items-center justify-center"><i class="fa-solid fa-chess-knight text-white"></i></div><span class="text-xs font-semibold">Chess.com</span><span class="text-[10px] text-white/40">Play</span></button>
+          <button onclick="goQuick('https://openai.com/chatgpt')" class="app-card glass rounded-2xl p-4 flex flex-col items-center gap-3 text-center"><div class="w-10 h-10 rounded-xl bg-[#10A37F] flex items-center justify-center"><i class="fa-solid fa-robot text-white"></i></div><span class="text-xs font-semibold">ChatGPT</span><span class="text-[10px] text-white/40">AI</span></button>
+        </div>
+      </div>
+
+      <!-- Games row like Aether -->
+      <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <div class="glass rounded-2xl p-4 flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-bolt text-white"></i></div>
+          <div><div class="text-sm font-bold">Fast Proxy</div><div class="text-xs text-white/50">Epoxy + WISP • Scramjet rewriter in WASM</div></div>
+          <span class="ml-auto w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        </div>
+        <div class="glass rounded-2xl p-4 flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-shield-halved text-white"></i></div>
+          <div><div class="text-sm font-bold">About:Blank Cloak</div><div class="text-xs text-white/50">Click Cloak to hide in history</div></div>
+          <button onclick="cloak()" class="ml-auto text-xs px-3 py-1.5 rounded-lg bg-white text-black font-bold">Open</button>
+        </div>
+        <div class="glass rounded-2xl p-4 flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-wand-magic-sparkles text-white"></i></div>
+          <div><div class="text-sm font-bold">Aether Theme</div><div class="text-xs text-white/50">Graphite • Teal • Violet</div></div>
+          <div class="ml-auto text-[10px] px-2 py-1 rounded-full bg-white/10 border border-white/10">v2.1.0</div>
+        </div>
+      </div>
+
+      <p class="text-center text-[11px] text-white/30 mt-8">Uses public WISP <span class="text-white/50">wss://wisp.mercurywork.shop/</span> • Host your own for production • Service worker required (HTTPS)</p>
+    </div>
+  </div>
+
+  <!-- BROWSER VIEW -->
+  <div id="browserView">
+    <div class="h-12 flex items-center gap-2 px-3 bg-[#0f1117] border-b border-white/5 shrink-0">
+      <button onclick="navBack()" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center"><i class="fa-solid fa-arrow-left text-xs"></i></button>
+      <button onclick="navForward()" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center"><i class="fa-solid fa-arrow-right text-xs"></i></button>
+      <button onclick="navReload()" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center"><i class="fa-solid fa-rotate-right text-xs"></i></button>
+      <div class="flex-1 flex items-center gap-2 bg-[#1a1e2a] border border-white/5 rounded-xl px-3 h-8">
+        <i class="fa-solid fa-lock text-emerald-400 text-[10px]"></i>
+        <input id="urlBar" class="flex-1 bg-transparent outline-none text-xs text-white/90" placeholder="https://"/>
+      </div>
+      <button onclick="toggleFullscreen()" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 hidden sm:flex items-center justify-center"><i class="fa-solid fa-expand text-xs"></i></button>
+      <button onclick="closeBrowser()" class="px-4 h-8 rounded-xl bg-white text-black text-xs font-bold">Close <i class="fa-solid fa-xmark ml-1"></i></button>
+    </div>
+    <div class="flex-1 relative bg-white">
+      <iframe id="browserFrame" class="absolute inset-0 w-full h-full border-0 bg-white" allow="fullscreen; autoplay; clipboard-read; clipboard-write; camera; microphone"></iframe>
+      <div id="loader" class="absolute inset-0 bg-[#0f1117] flex flex-col items-center justify-center gap-4 hidden">
+        <div class="w-8 h-8 rounded-full border-2 border-white/10 border-t-violet-500 animate-spin"></div>
+        <div class="text-xs text-white/60">Loading via Scramjet...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div id="settings" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="glass rounded-2xl max-w-md w-full p-6 bg-[#0f1117]">
+      <div class="flex items-center justify-between mb-4"><h3 class="font-bold">Settings</h3><button onclick="toggleSettings()" class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center"><i class="fa-solid fa-xmark text-xs"></i></button></div>
+      <label class="text-xs text-white/60">WISP Server (websocket)</label>
+      <input id="wispInput" value="wss://wisp.mercurywork.shop/" class="w-full mt-1 bg-[#141821] border border-white/10 rounded-xl px-3 py-2 text-xs outline-none"/>
+      <p class="text-[11px] text-white/40 mt-2">Change requires reload. Host your own: wisp-server-rust.</p>
+      <button onclick="saveSettings()" class="w-full mt-4 h-10 rounded-xl bg-violet-600 text-white font-bold text-sm">Save &amp; Reload</button>
+    </div>
+  </div>
+
 <script><![CDATA[
-const { ScramjetController } = $scramjetLoadController();
-const scramjet = new ScramjetController({
-  prefix: "/scramjet/",
-  codec: { encode: (url) => encodeURIComponent(url), decode: (url) => decodeURIComponent(url) },
-  flags: { captureErrors: true, strictRewrites: true }
-});
-let frame;
-async function init() {
-  const status = document.getElementById('status');
-  try {
-    if (!('serviceWorker' in navigator)) { status.textContent='need https'; return; }
-    await navigator.serviceWorker.register('./sw.js', { scope: './' });
-    await navigator.serviceWorker.ready;
-    status.textContent='sw ready';
-    await scramjet.init();
-    status.textContent='ready';
-    frame = scramjet.createFrame();
-    document.getElementById('container').appendChild(frame.frame);
-    frame.go('https://example.com');
-  } catch(e){ console.error(e); status.textContent='error:'+e.message; }
+let scramjet, frame, transport;
+let wispUrl = localStorage.getItem('wispUrl') || 'wss://wisp.mercurywork.shop/';
+document.getElementById('wispInput').value = wispUrl;
+
+function showStatus(msg, err=false){
+  const s=document.getElementById('status');
+  s.style.display='flex';
+  s.className = err ? 'max-w-2xl mx-auto mt-4 flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-xs' : 'max-w-2xl mx-auto mt-4 flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs';
+  document.getElementById('statusText').textContent = msg;
 }
-document.getElementById('go').onclick = () => {
-  const v=document.getElementById('url').value.trim();
-  if(!v) return;
-  frame.go(v.startsWith('http')?v:'https://'+v);
-};
-document.getElementById('url').onkeydown = e=>{ if(e.key==='Enter') document.getElementById('go').click(); };
-init();
+
+function resolveUrl(input){
+  input=input.trim();
+  if(!input) return null;
+  if(input.includes('.') && !input.includes(' ') && !input.startsWith('http')){
+    // looks like domain
+    if(input.includes('://')) return input;
+    return 'https://' + input;
+  }
+  if(input.startsWith('http://') || input.startsWith('https://')) return input;
+  // search
+  return 'https://duckduckgo.com/?q=' + encodeURIComponent(input);
+}
+
+async function ensureInit(){
+  if(scramjet && frame) return true;
+  showStatus('Initializing Scramjet...');
+  try{
+    await navigator.serviceWorker.ready;
+    const serviceworker = navigator.serviceWorker.controller || (await navigator.serviceWorker.ready).active;
+    if(!serviceworker){ showStatus('No service worker - need HTTPS', true); return false; }
+    const { Controller } = $scramjetController;
+    const { defaultConfig } = $scramjet;
+    const EpoxyTransport = self.EpoxyTransport.default;
+    transport = new EpoxyTransport({ wisp: wispUrl });
+    await transport.init();
+    scramjet = new Controller({ serviceworker, transport, scramjetConfig: defaultConfig });
+    await scramjet.wait();
+    frame = scramjet.createFrame(document.getElementById('browserFrame'));
+    // keep url bar synced if scramjet emits
+    try{ frame.addEventListener('urlchange', e=>{ document.getElementById('urlBar').value = e.url || ''; }); }catch{}
+    document.getElementById('status').style.display='none';
+    return true;
+  }catch(e){
+    console.error(e);
+    showStatus(e.message || 'Failed to init - check WISP online', true);
+    return false;
+  }
+}
+
+async function navigate(url){
+  url = resolveUrl(url);
+  if(!url) return;
+  document.getElementById('loader').style.display='flex';
+  document.getElementById('browserView').classList.add('active');
+  document.getElementById('urlBar').value = url;
+  const ok = await ensureInit();
+  if(!ok){ document.getElementById('loader').style.display='none'; return; }
+  frame.go(url);
+  setTimeout(()=>{ document.getElementById('loader').style.display='none'; }, 900);
+}
+
+function doSearch(){ navigate(document.getElementById('mainSearch').value); }
+function goQuick(url){ navigate(url); }
+
+document.getElementById('mainSearch').addEventListener('keydown', e=>{ if(e.key==='Enter') doSearch(); });
+document.getElementById('urlBar').addEventListener('keydown', e=>{ if(e.key==='Enter') navigate(e.target.value); });
+
+function closeBrowser(){ document.getElementById('browserView').classList.remove('active'); }
+function navBack(){ try{ frame.back(); }catch{} }
+function navForward(){ try{ frame.forward(); }catch{} }
+function navReload(){ try{ frame.reload(); }catch{} }
+function toggleFullscreen(){ const f=document.getElementById('browserFrame'); if(document.fullscreenElement) document.exitFullscreen(); else f.requestFullscreen?.(); }
+function toggleSettings(){ const el=document.getElementById('settings'); el.style.display = el.style.display==='flex' ? 'none' : 'flex'; if(el.style.display==='flex') el.classList.add('flex'); }
+function saveSettings(){ localStorage.setItem('wispUrl', document.getElementById('wispInput').value.trim()); location.reload(); }
+function cloak(){
+  const url = location.href;
+  const w = window.open('about:blank','_blank');
+  if(!w) return alert('Allow popups for cloaking');
+  w.document.title='Home | Infinite Campus';
+  w.document.body.style.cssText='margin:0;height:100vh';
+  const f=w.document.createElement('iframe');
+  f.style.cssText='width:100%;height:100%;border:0'; f.src=url; w.document.body.appendChild(f);
+  location.replace('https://classroom.google.com');
+}
+
+// register SW
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').then(()=>console.log('sw registered')).catch(e=>showStatus('SW fail: '+e.message, true));
+} else {
+  showStatus('Service workers not supported - need HTTPS', true);
+}
 ]]></script>
 </body></html></foreignObject></svg>
